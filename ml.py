@@ -6,23 +6,28 @@ import streamlit as st
 
 st.title('Model Building')
 
-train = pd.read_csv('traindata.csv')
-test = pd.read_csv('testdata.csv')
-st.write('Cleaned Data has been successfully loaded')
-st.write(train.head())
-
-
+data = None
+dataset_type = st.selectbox('Dataset Type', ('Single File', 'Train & Test files'))
+if dataset_type == 'Single File':
+    train = pd.read_csv('data.csv')
+    st.write('Cleaned Data has been successfully loaded')
+    st.write(train.head())
+else:
+    train = pd.read_csv('traindata.csv')
+    test = pd.read_csv('testdata.csv')  
+    st.write('Cleaned Data has been successfully loaded')
+    st.write(train.head())
+    train = pd.concat([train, test])
 
 X = train
-X.drop('Id', axis=1, inplace=True)
-y = X.pop('SalePrice')
+# X.drop('Id', axis=1, inplace=True)
+targetvariable = st.selectbox('Target Variable', tuple(train.columns))
+y = X.pop(targetvariable)
 
-testid = test.Id
-test.pop('SalePrice')
-test.pop('Id')
+# testid = test.Id
+# test.pop(targetvariable)
+# test.pop('Id')
 
-print(train.shape)
-print(test.shape)
 
 from sklearn.model_selection import train_test_split
 
@@ -109,6 +114,7 @@ elif option1 == 'Bayesian Ridge':
     if tune:
         model = GridSearchCV(BayesianRidge(),param_grid,cv=5)
         model.fit(X_train, y_train)
+        
         y_pred = model.best_estimator_.predict(X_test)
     else:
         model = BayesianRidge()
@@ -136,7 +142,6 @@ elif option1 == 'SVR':
         # my_submission = pd.DataFrame({'Id': test.Id, 'SalePrice': predicted_prices})
     else:
         model = SVR()
-
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
